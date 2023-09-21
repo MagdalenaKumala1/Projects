@@ -1,1 +1,328 @@
 rm(list=ls())
+#install.packages("dplyr")
+library(dplyr)
+#install.packages("corrplot")
+library(corrplot)
+#install.packages("corrr")
+library(corrr)
+
+#wczytywanie danych 
+dane1 <- read.table("players.csv",sep=";",header = TRUE)
+dane <- players
+
+#podstawowe statystyki
+summary(dane)
+
+#histogramy dla 
+hist(dane$AGE, xlab = "WIEK", main = "HISTOGRAM DLA WIEKU", col="gold")
+hist(dane$PASS.YDS, xlab = "ZDOBYTE JARDY", main = "HISTOGRAM DLA ZDOYTYCH JARDÓW", col="gold")
+hist(dane$ATT, xlab = "LICZBA ODDANYCH PRÓB", main = "HISTOGRAM DLA LICZBY ODDANYCH PRÓB", col="gold")
+hist(dane$CMP, xlab = "CELNE RZUTY", main = "HISTOGRAM DLA LICZBY CELNYCH RZUTÓW", col="gold")
+hist(dane$CMP., xlab = "PROCENT CELNYCH RZUTÓW", main = "HISTOGRAM DLA PROCENTU CELNYCH RZYTÓW", col="gold")
+hist(dane$TD, xlab = "PRZYOŻENIA", main = "HISTOGRAM DLA LICZBY PRZYLOZEN", col="gold")
+hist(dane$INT, xlab = "PRZECHWYTY", main = "HISTOGRAM DLA LICZBY PRZECHWYTOW", col="gold")
+hist(dane$X1ST., xlab = "PROCENT ZDOBYCIA PIERWSZEJ PROBY", main = "HISTOGRAM DLA PROCENTU ZDOBYCIA PIERWSZEJ PROBY", col="gold")
+
+#korelacja zmiennych 
+
+korelacja <- round(cor(dane[,2:9]),3)
+show(korelacja)
+corrplot(korelacja)
+
+korelacja_AGE_PASS.YDS <- cor(dane$AGE, dane$PASS.YDS, use = "everything", method = "pearson")
+korelacja_AGE_ATT <- cor(dane$AGE, dane$ATT, use = "everything", method = "pearson")
+korelacja_AGE_CMP <- cor(dane$AGE, dane$CMP, use = "everything", method = "pearson")
+korelacja_AGE_CMP. <- cor(dane$AGE, dane$CMP., use = "everything", method = "pearson")
+korelacja_AGE_TD <- cor(dane$AGE, dane$TD, use = "everything", method = "pearson")
+korelacja_AGE_INT <- cor(dane$AGE, dane$INT, use = "everything", method = "pearson")
+korelacja_AGE_X1ST. <- cor(dane$AGE, dane$X1ST., use = "everything", method = "pearson")
+show(korelacja_AGE_PASS.YDS)
+show(korelacja_AGE_ATT)
+show(korelacja_AGE_CMP)
+show(korelacja_AGE_CMP.)
+show(korelacja_AGE_TD)
+show(korelacja_AGE_INT)
+show(korelacja_AGE_X1ST.)
+
+#wykresy pudelkowe z wasem
+boxplot(dane$AGE, xlab = "WIEK", main = "WYKRES PUDELKOWY Z WASEM DLA WIEKU", col="navy blue")
+boxplot(dane$PASS.YDS, xlab = "ZDOBYTE JARDY", main = "WYKRES PUDELKOWY Z WASEM DLA ZDOYTYCH JARDÓW", col="navy blue")
+boxplot(dane$ATT, xlab = "LICZBA ODDANYCH PRÓB", main = "WYKRES PUDELKOWY Z WASEM DLA LICZBY ODDANYCH PRÓB", col="navy blue")
+boxplot(dane$CMP, xlab = "CELNE RZUTY", main = "WYKRES PUDELKOWY Z WASEM DLA LICZBY CELNYCH RZUTÓW", col="navy blue")
+boxplot(dane$CMP., xlab = "PROCENT CELNYCH RZUTÓW", main = "WYKRES PUDELKOWY Z WASEM DLA PROCENTU CELNYCH RZYTÓW", col="navy blue")
+boxplot(dane$TD, xlab = "PRZYOŻENIA", main = "WYKRES PUDELKOWY Z WASEM DLA LICZBY PRZYLOZEN", col="navy blue")
+boxplot(dane$INT, xlab = "PRZECHWYTY", main = "WYKRES PUDELKOWY Z WASEM DLA LICZBY PRZECHWYTOW", col="navy blue")
+boxplot(dane$X1ST., xlab = "PROCENT ZDOBYCIA PIERWSZEJ PROBY", main = "WYKRES PUDELKOWY Z WASEM DLA PROCENTU ZDOBYCIA PIERWSZEJ PROBY", col="navy blue")
+
+#zmainan destymulanty na stymulantę
+dane$INT<-dane$INT*-1
+
+#metoda hellwiga
+#zmiana nominanty na stymulantę
+age0<-27.5
+for(i in 1:20){
+  if(dane[i,2]==age0){
+    dane[i,2]=1
+  }
+  else if (dane[i,2]<age0){
+    dane[i,2]= (-1)/(dane[i,2]-age0-1)
+  }
+  if(dane[i,2]>age0){
+    dane[i,2]= 1/(dane[i,2]-age0+1)
+  }
+}
+
+#standaryzacja
+dane_standaryzacja<-as.data.frame(scale(dane[1:20,1:8]))
+
+#wyszukiwanie wzorca
+wzorzec_AGE <- max(dane_standaryzacja$AGE, TRUE)
+wzorzec_PASS.YDS<-max(dane_standaryzacja$PASS.YDS, TRUE)
+wzorzec_ATT<-max(dane_standaryzacja$ATT, TRUE)
+wzorzec_CMP<-max(dane_standaryzacja$CMP, TRUE)
+wzorzec_CMP.<-max(dane_standaryzacja$CMP., TRUE)
+wzorzec_TD<-max(dane_standaryzacja$TD, TRUE)
+wzorzec_INT <- max(dane_standaryzacja$INT, TRUE)
+wzorzec_X1ST. <- max(dane_standaryzacja$X1ST., TRUE)
+
+#obliczanie odległości obiektóqw od wzorca
+for(i in 1:20){
+  dane_standaryzacja[i,1]=(dane_standaryzacja[i,1]-wzorzec_AGE)^2
+}
+for(i in 1:20){
+  dane_standaryzacja[i,2]=(dane_standaryzacja[i,2]-wzorzec_PASS.YDS)^2
+}
+for(i in 1:20){
+  dane_standaryzacja[i,3]=(dane_standaryzacja[i,3]-wzorzec_ATT)^2
+}
+for(i in 1:20){
+  dane_standaryzacja[i,4]=(dane_standaryzacja[i,4]-wzorzec_CMP)^2
+}
+for(i in 1:20){
+  dane_standaryzacja[i,5]=(dane_standaryzacja[i,5]-wzorzec_CMP.)^2
+}
+for(i in 1:20){
+  dane_standaryzacja[i,6]=(dane_standaryzacja[i,6]-wzorzec_TD)^2
+}
+for(i in 1:20){
+  dane_standaryzacja[i,7]=(dane_standaryzacja[i,7]-wzorzec_INT)^2
+}
+for(i in 1:20){
+  dane_standaryzacja[i,8]=(dane_standaryzacja[i,8]-wzorzec_X1ST.)^2
+}
+
+#odległość - pierwiastek z sumy wierszy
+odleglosc1 <- (dane_standaryzacja[1,1]+dane_standaryzacja[1,2]+dane_standaryzacja[1,3]+dane_standaryzacja[1,4]+dane_standaryzacja[1,5]+dane_standaryzacja[1,6]+dane_standaryzacja[1,7]+dane_standaryzacja[1,8])^(1/2)
+odleglosc2 <- (dane_standaryzacja[2,1]+dane_standaryzacja[2,2]+dane_standaryzacja[2,3]+dane_standaryzacja[2,4]+dane_standaryzacja[2,5]+dane_standaryzacja[2,6]+dane_standaryzacja[2,7]+dane_standaryzacja[2,8])^(1/2)
+odleglosc3 <- (dane_standaryzacja[3,1]+dane_standaryzacja[3,2]+dane_standaryzacja[3,3]+dane_standaryzacja[3,4]+dane_standaryzacja[3,5]+dane_standaryzacja[3,6]+dane_standaryzacja[3,7]+dane_standaryzacja[3,8])^(1/2)
+odleglosc4 <- (dane_standaryzacja[4,1]+dane_standaryzacja[4,2]+dane_standaryzacja[4,3]+dane_standaryzacja[4,4]+dane_standaryzacja[4,5]+dane_standaryzacja[4,6]+dane_standaryzacja[4,7]+dane_standaryzacja[4,8])^(1/2)
+odleglosc5 <- (dane_standaryzacja[5,1]+dane_standaryzacja[5,2]+dane_standaryzacja[5,3]+dane_standaryzacja[5,4]+dane_standaryzacja[5,5]+dane_standaryzacja[5,6]+dane_standaryzacja[5,7]+dane_standaryzacja[5,8])^(1/2)
+odleglosc6 <- (dane_standaryzacja[6,1]+dane_standaryzacja[6,2]+dane_standaryzacja[6,3]+dane_standaryzacja[6,4]+dane_standaryzacja[6,5]+dane_standaryzacja[6,6]+dane_standaryzacja[6,7]+dane_standaryzacja[6,8])^(1/2)
+odleglosc7 <- (dane_standaryzacja[7,1]+dane_standaryzacja[7,2]+dane_standaryzacja[7,3]+dane_standaryzacja[7,4]+dane_standaryzacja[7,5]+dane_standaryzacja[7,6]+dane_standaryzacja[7,7]+dane_standaryzacja[7,8])^(1/2)
+odleglosc8 <- (dane_standaryzacja[8,1]+dane_standaryzacja[8,2]+dane_standaryzacja[8,3]+dane_standaryzacja[8,4]+dane_standaryzacja[8,5]+dane_standaryzacja[8,6]+dane_standaryzacja[8,7]+dane_standaryzacja[8,8])^(1/2)
+odleglosc9 <- (dane_standaryzacja[9,1]+dane_standaryzacja[9,2]+dane_standaryzacja[9,3]+dane_standaryzacja[9,4]+dane_standaryzacja[9,5]+dane_standaryzacja[9,6]+dane_standaryzacja[9,7]+dane_standaryzacja[9,8])^(1/2)
+odleglosc10 <- (dane_standaryzacja[10,1]+dane_standaryzacja[10,2]+dane_standaryzacja[10,3]+dane_standaryzacja[10,4]+dane_standaryzacja[10,5]+dane_standaryzacja[10,6]+dane_standaryzacja[10,7]+dane_standaryzacja[10,8])^(1/2)
+odleglosc11 <- (dane_standaryzacja[11,1]+dane_standaryzacja[11,2]+dane_standaryzacja[11,3]+dane_standaryzacja[11,4]+dane_standaryzacja[11,5]+dane_standaryzacja[11,6]+dane_standaryzacja[11,7]+dane_standaryzacja[11,8])^(1/2)
+odleglosc12 <- (dane_standaryzacja[12,1]+dane_standaryzacja[12,2]+dane_standaryzacja[12,3]+dane_standaryzacja[12,4]+dane_standaryzacja[12,5]+dane_standaryzacja[12,6]+dane_standaryzacja[12,7]+dane_standaryzacja[12,8])^(1/2)
+odleglosc13 <- (dane_standaryzacja[13,1]+dane_standaryzacja[13,2]+dane_standaryzacja[13,3]+dane_standaryzacja[13,4]+dane_standaryzacja[13,5]+dane_standaryzacja[13,6]+dane_standaryzacja[13,7]+dane_standaryzacja[13,8])^(1/2)
+odleglosc14 <- (dane_standaryzacja[14,1]+dane_standaryzacja[14,2]+dane_standaryzacja[14,3]+dane_standaryzacja[14,4]+dane_standaryzacja[14,5]+dane_standaryzacja[14,6]+dane_standaryzacja[14,7]+dane_standaryzacja[14,8])^(1/2)
+odleglosc15 <- (dane_standaryzacja[15,1]+dane_standaryzacja[15,2]+dane_standaryzacja[15,3]+dane_standaryzacja[15,4]+dane_standaryzacja[15,5]+dane_standaryzacja[15,6]+dane_standaryzacja[15,7]+dane_standaryzacja[15,8])^(1/2)
+odleglosc16 <- (dane_standaryzacja[16,1]+dane_standaryzacja[16,2]+dane_standaryzacja[16,3]+dane_standaryzacja[16,4]+dane_standaryzacja[16,5]+dane_standaryzacja[16,6]+dane_standaryzacja[16,7]+dane_standaryzacja[16,8])^(1/2)
+odleglosc17 <- (dane_standaryzacja[17,1]+dane_standaryzacja[17,2]+dane_standaryzacja[17,3]+dane_standaryzacja[17,4]+dane_standaryzacja[17,5]+dane_standaryzacja[17,6]+dane_standaryzacja[17,7]+dane_standaryzacja[17,8])^(1/2)
+odleglosc18 <- (dane_standaryzacja[18,1]+dane_standaryzacja[18,2]+dane_standaryzacja[18,3]+dane_standaryzacja[18,4]+dane_standaryzacja[18,5]+dane_standaryzacja[18,6]+dane_standaryzacja[18,7]+dane_standaryzacja[18,8])^(1/2)
+odleglosc19 <- (dane_standaryzacja[19,1]+dane_standaryzacja[19,2]+dane_standaryzacja[19,3]+dane_standaryzacja[19,4]+dane_standaryzacja[19,5]+dane_standaryzacja[19,6]+dane_standaryzacja[19,7]+dane_standaryzacja[19,8])^(1/2)
+odleglosc20 <- (dane_standaryzacja[20,1]+dane_standaryzacja[20,2]+dane_standaryzacja[20,3]+dane_standaryzacja[20,4]+dane_standaryzacja[20,5]+dane_standaryzacja[20,6]+dane_standaryzacja[20,7]+dane_standaryzacja[20,8])^(1/2)
+
+#tabelka
+tab <- matrix(c(odleglosc1,odleglosc2, odleglosc3, odleglosc4, odleglosc5, odleglosc6, odleglosc7, odleglosc8, odleglosc9, odleglosc10, odleglosc11,odleglosc12,odleglosc13,odleglosc14,odleglosc15,odleglosc16,odleglosc17,odleglosc18,odleglosc19,odleglosc20), ncol=1, byrow=TRUE)
+colnames(tab) <- c('odleglosci')
+tab <- as.table(tab)
+tabelka <- as.data.frame(tab)
+
+
+#oglegolosc "mozliwie daleka"
+#srednia 
+srednia<- mean(tabelka$Freq)
+#odchylenie standardowe 
+odchylenie_standardowe <- sd(tabelka$Freq)
+d0<-srednia+2*odchylenie_standardowe
+
+#miary Hellwiga
+hel1 <- 1-(odleglosc1/d0)
+hel2 <- 1-(odleglosc2/d0)
+hel3 <- 1-(odleglosc3/d0)
+hel4 <- 1-(odleglosc4/d0)
+hel5 <- 1-(odleglosc5/d0)
+hel6 <- 1-(odleglosc6/d0)
+hel7 <- 1-(odleglosc7/d0)
+hel8 <- 1-(odleglosc8/d0)
+hel9 <- 1-(odleglosc9/d0)
+hel10 <- 1-(odleglosc10/d0)
+hel11 <- 1-(odleglosc11/d0)
+hel12 <- 1-(odleglosc12/d0)
+hel13 <- 1-(odleglosc13/d0)
+hel14 <- 1-(odleglosc14/d0)
+hel15 <- 1-(odleglosc15/d0)
+hel16 <- 1-(odleglosc16/d0)
+hel17 <- 1-(odleglosc17/d0)
+hel18 <- 1-(odleglosc18/d0)
+hel19 <- 1-(odleglosc19/d0)
+hel20 <- 1-(odleglosc20/d0)
+
+#tabela Hellwiga
+tab1 <- matrix(c(hel1,hel2, hel3, hel4, hel5, hel6, hel7, hel8, hel9, hel10, hel11, hel12, hel13, hel14, hel15, hel16, hel17, hel18, hel19, hel20), ncol=1, byrow=TRUE)
+tab1 <- as.table(tab1)
+Hellwig1 <- as.data.frame(tab1)
+Hellwig <- as.data.frame(sample(Hellwig1[1:20,2:3]))
+
+#install.packages("writexl")
+library(writexl)
+
+write_xlsx(Hellwig, "C:\\Users\\Magdalena\\Documents\\hellwig.xlsx")
+
+#współczynnik zmienności
+for(i in 2:ncol(dane)){
+  print(sd(dane[,i])/mean(dane[,i]))
+}
+
+
+#GRUPOWANIE PODZIAŁOWE
+
+#METODA K-ŚREDNICH
+#install.packages("stats")
+library(stats)
+
+#podział na 2 grupy
+gr2<-kmeans(x=dane_standaryzacja,centers = 2,nstart=20)
+sort(gr2$cluster)
+
+#porównanie statystyk w grupach
+#install.packages("psych")
+library(psych)
+dane$gr2<-as.factor(gr2$cluster)
+describeBy(dane[,-6],group=dane$gr2)
+
+#podział na 3 grupy
+gr3<-kmeans(x=dane_standaryzacja,centers = 3,nstart=20)
+sort(gr3$cluster)
+dane$gr3<-as.factor(gr3$cluster)
+describeBy(dane[,c(-6,-7)], group = dane$gr3)
+
+
+#wykresy ukazujące podział grupy 2 i 3
+#install.packages("ggplot2")
+library(ggplot2)
+ggplot(dane,aes(x=TD,y=CMP.))+
+  geom_text(aes(label=rownames(dane),color=gr2))+
+  theme(legend.position = "None")
+
+ggplot(dane,aes(x=TD,y=CMP.))+
+  geom_text(aes(label=rownames(dane),color=gr3))+
+  theme(legend.position = "None")
+
+#GRUPOWANIE HIERARCHICZNE
+# metoda mediany
+#macierz odleglosci
+d <- dist(dane_standaryzacja, method = "euclidean")
+#podzial na klastry
+fit <- hclust(d, method="median")
+#dendrogram
+plot(fit)
+#podzial dendrogramu na 2 klastry
+groups <- cutree(fit, k=2)
+#przedstawienie klastrow na drzewie
+rect.hclust(fit, k=2, border="gold")
+
+
+#metoda Warda
+#podzial na klastry
+fit <- hclust(d, method="ward.D2")
+#dendrogram
+plot(fit)
+#podzial dendrogramu na 3 klastry
+groups <- cutree(fit, k=3)
+#przedstawienie klastrow na drzewie
+rect.hclust(fit, k=3, border="navy blue")
+
+
+#metoda mcquitty
+#podzial na klastry
+fit <- hclust(d, method="mcquitty")
+#dendrogram
+plot(fit)
+#podzial dendrogramu na 2 klastry
+groups <- cutree(fit, k=2)
+#przedstawienie klastrow na drzewie
+rect.hclust(fit, k=2, border="gold")
+
+#skalowanie wielowymiarowe - klasyczne
+#macierz odleglosci
+odl <- dist(dane_standaryzacja)
+library(stats)
+??stats::cmdscale
+
+#install.packages("graphics")
+library(graphics)
+??graphics::text
+
+#przestrzeń 2 wymiadowa
+sww2 <- cmdscale(odl, k=2)
+show(sww2)
+
+plot(sww2)
+text(sww2, label = rownames(dane), pos = 2)
+plot(sww2, xlab = "PIERWSZY WYMIAR", ylab = "DRUGI WYMIAR", xlim = c(-20,21), ylim = c(-21,22), main = "KLASYCZNE SKALOWANIE WIELOWYMIAROWE")
+text(sww2, labels = rownames(dane), pos=2)
+
+#funkcja z wspolczynnikiem stress
+stress <- function(d1,d2){
+  sqrt(sum(d1-d2)^2/sum(d1^2))
+}
+
+#rzeczywista macierz odl
+odl
+#macierz odl po przeprowadzaniu skalowania - 2 wymiary
+odl2 <- dist(sww2)
+show(dist)
+
+#wspolczynnik stress
+stress(odl,odl2)
+
+#przestrzen trzy wymiarowa
+sww3 <- cmdscale(odl, k=3)
+show(sww3)
+x <- sww3[,1]
+show(x)
+y <- sww3[,2]
+z <- sww3[,3]
+#install.packages("xfun")
+#install.packages("rgl")
+library(rgl)
+scatter3D(x, y, z, xlab = "PIERWSZY WYMIAR", ylab = "DRUGI WYMIAR", zlab = "TRZECI WYMIAR", main ="KLASYCZNE SKALOWANIE WIELOWYMIAROWE")
+text3D(x, y, z,  labels = rownames(dane),
+       add = TRUE, colkey = FALSE, cex = 0.5)
+#wspolczynnik stress
+odl3<-dist(sww3)
+stress(odl,odl3)
+
+#skalowanie niemetryczne
+library(MASS)
+#przestrzen dwu wymiarowa
+mds2 <- isoMDS(odl, k=2)
+show(mds2$points)
+show(mds2$stress)
+
+plot(mds2$points, xlab = "PIERWSZY WYMIAR", ylab = "DRUGI WYMIAR", xlim = c(-30,20), ylim = c(-20,20), main = "SKALOWANIE NIEMETRYCZNE")
+text(mds2$points, labels = rownames(dane), pos = 2)
+
+#przestrzen trzy wymiarowa
+mds3 <- isoMDS(odl, k=3)
+show(mds3$points)
+show(mds3$stress)
+x1 <- mds3$points[,1]
+y2 <- mds3$points[,2]
+z3 <- mds3$points[,3]
+
+scatter3D(z, y, z, xlab = "PIERWSZY WYMIAR", ylab = "DRUGI WYMIAR", zlab = "TRZECI WYMIAR", main = "SKALOWANIE NIEMETRYCZNE")
+text3D(x, y, z,  labels = rownames(dane),
+       add = TRUE, colkey = FALSE, cex = 0.5)
